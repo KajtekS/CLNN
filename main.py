@@ -1,6 +1,7 @@
 import argparse
 from PIPELINE.pipeline import Pipeline
 from TOOLS.config_parser import ConfigParser
+from PREPROC.preproc import Preproc
 
 def main():
     # region BLOCK FOR PARSING
@@ -16,9 +17,12 @@ def main():
     PATH = args.config
     # endregion
     
-    # region RUN PIPELINE
+    #RUN PIPELINE
     config = ConfigParser.parse(PATH)
     Pipeline.run(config)
+
+    p = Preproc
+    p.face_detector
 
 if __name__ == "__main__":
     main()
