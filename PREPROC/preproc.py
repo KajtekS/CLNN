@@ -7,30 +7,39 @@ class Preproc:
     def __init__(self) -> None:
         self.model = YOLO("TOOLS/yolov8/yolov8n-face.pt")
 
-
     def proces(self, vid, recenter, square_size):
         count = recenter
         cor = None
         frames = []
 
+        # Extracting faces
         while True:
             success, img = vid.read()
 
             if not success:
                 break
 
-            count -= 1
-
-            if count % recenter == 0:
-                count = recenter - 1
+            if count == 0:
                 cor = self.face_detector(img)
+                count = recenter
 
             if cor is not None:
                 face = img[cor[1]:cor[3], cor[0]:cor[2]]
                 face = cv2.resize(face, square_size)
                 frames.append(face)
 
-    def face_detector(self, img: NDArray[np.uint8]) -> tuple[int, int, int, int]:
+            count -= 1
+        
+        # Diffrences counting and normalization
+        frames = np.asarray(frames, dtype=np.float32)
+        diff = (frames[1:] - frames[:-1]) / (frames[1:] + frames[:-1] + 1e-10)
+
+        # Standarization
+        diff = diff / np.std(diff)
+
+        return diff
+
+    def face_detector(self, img: NDArray[np.uint8]) -> tuple[int, int, int, int] | None:
         results = self.model(img)
         faces = []
 
@@ -43,6 +52,9 @@ class Preproc:
                     "bbox": (x1, y1, x2, y2),
                     "confidence": confidence,
                 })
+        if faces is None:
+            return None
+        
         face = max(
             faces,
             key=lambda f : (
