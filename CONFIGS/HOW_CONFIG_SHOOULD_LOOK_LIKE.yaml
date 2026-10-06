@@ -1,0 +1,29 @@
+# Here present my idea for yaml file in our project
+MAIN:
+  PROCESS_LAYER: "raw/bronze/silver/gold"
+
+RAW:
+  PATH: "./hello/world"
+
+BRONZE:
+  PATH: "./hello/world"
+  FS: 35
+  DOWN_SAMPLE:
+    DO: "YES"
+    FS: 30
+  
+SILVER:
+  PATH: "./hello/world"
+  SCALE: 1.5
+  MATRIX_SIZE: 72
+  NORM: "YES/NO"
+  STANDARIZATION: "YES/NO"
+
+GOLD:
+  PATH: "./hello/world"
+  CHUNK_SIZE: 270
+  AXIS_REORDER: "[N, H, W, C]"
+
+MODEL:
+  GPU: 0/1
+  NAME: LNN

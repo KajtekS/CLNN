@@ -1,12 +1,15 @@
 from abc import ABC, abstractmethod
 
-class model(ABC):
+
+class Model(ABC):
     @abstractmethod
-    def train():
+    def train(self):
         pass
+
     @abstractmethod
-    def test():
+    def test(self):
         pass
+
     @abstractmethod
-    def valid():
+    def valid(self):
         pass
