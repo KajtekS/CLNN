@@ -18,31 +18,22 @@ class Pipeline(ABC):
         # Stage of loading and processing data
         match layer:
             case 0:
-                data = self.raw_loader(
-                    self.config.main.DATASET,
-                    self.config.raw.PATH
-                )
+                data = self.raw_loader(self.config.main.DATASET, self.config.raw.PATH)
                 data = self.bronze(data)
                 data = self.silver(data)
                 data = self.gold(data)
 
             case 1:
-                data = self.bronze_loader(
-                    self.config.bronze.PATH
-                )
+                data = self.bronze_loader(self.config.bronze.PATH)
                 data = self.silver(data)
                 data = self.gold(data)
 
             case 2:
-                data = self.silver_loader(
-                    self.config.silver.PATH
-                )
+                data = self.silver_loader(self.config.silver.PATH)
                 data = self.gold(data)
 
             case 3:
-                data = self.gold_loader(
-                    self.config.gold.PATH
-                )
+                data = self.gold_loader(self.config.gold.PATH)
 
             case _:
                 raise ValueError(f"Invalid PROCESS_LAYER: {layer}")
@@ -51,22 +42,24 @@ class Pipeline(ABC):
 
     # Functions to load data from diffrent stages of processing
     def raw_loader(self, dataset_type, data_path) -> cv2.VideoCapture:
-        match(dataset_type):
-            case 'PURE':
+        match dataset_type:
+            case "PURE":
                 pass
-            case 'rPPG':
+            case "rPPG":
                 pass
-            case 'PHYS':
+            case "PHYS":
                 pass
-            case 'SUMS':
+            case "SUMS":
                 pass
             case _:
                 raise ValueError(f"{dataset_type} is invalid DATASET name")
 
     def bronze_loader(self, data_path) -> cv2.VideoCapture:
         pass
+
     def silver_loader(self, data_path) -> np.ndarray:
         pass
+
     def gold_loader(self, data_path) -> np.ndarray:
         pass
 
@@ -74,9 +67,11 @@ class Pipeline(ABC):
     @abstractmethod
     def bronze(self, data) -> list[tuple[cv2.VideoCapture, int]]:
         pass
+
     @abstractmethod
     def silver(self, data) -> np.ndarray:
         pass
+
     @abstractmethod
     def gold(self, data) -> np.ndarray:
         pass
