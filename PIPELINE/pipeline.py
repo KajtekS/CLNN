@@ -65,7 +65,7 @@ class Pipeline(ABC):
 
     # Functions to process data at diffrent stages
     @abstractmethod
-    def bronze(self, data) -> list[tuple[cv2.VideoCapture, int]]:
+    def bronze(self, data: np.ndarray, gt: np.ndarray, fs_start: int, fs_end: int) -> tuple[np.ndarray, np.ndarray]:
         pass
 
     @abstractmethod
