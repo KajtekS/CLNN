@@ -11,5 +11,3 @@ def hash_yaml(path: Path, size = 16) -> str:
     hash = m.hexdigest()
 
     return hash[:size]
-
-print(hash_yaml(Path('CONFIGS/HOW_CONFIG_SHOOULD_LOOK_LIKE.yaml')))
