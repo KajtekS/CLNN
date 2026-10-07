@@ -9,6 +9,7 @@ dependencies = [
     "numpy>=2.5.3",
     "opencv-python>=5.0.0.93",
     "pandas>=3.0.6",
+    "pytest>=9.1.1",
     "pyyaml>=6.0.3",
     "requests>=2.34.2",
     "scipy>=1.18.1",
@@ -24,3 +25,6 @@ dependencies = [
 dev = [
     "ruff>=0.16.10",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
