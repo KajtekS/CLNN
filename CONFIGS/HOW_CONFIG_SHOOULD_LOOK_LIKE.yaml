@@ -20,7 +20,7 @@ SILVER:
   STANDARIZATION: "YES/NO"
 
 GOLD:
-  PATH: "./hello/world"
+  PATH: "./hello/worlds"
   CHUNK_SIZE: 270
   AXIS_REORDER: "[N, H, W, C]"
 

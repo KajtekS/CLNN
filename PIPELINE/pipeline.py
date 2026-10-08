@@ -6,11 +6,10 @@ from TOOLS.config_parser import Layer
 from MODELS.model import Model
 from pathlib import Path
 
-
 class Pipeline(ABC):
-    def __init__(self, model: Model, config_path: Path) -> None:
+    def __init__(self, config_path: Path) -> None:
         super().__init__()
-        self.config = ConfigParser.parse(config_path)
+        # self.config = ConfigParser.parse(config_path)
 
     def run(self) -> np.ndarray:
         layer = self.config.main.PROCESS_LAYER
@@ -41,7 +40,7 @@ class Pipeline(ABC):
         return data
 
     # Functions to load data from diffrent stages of processing
-    def raw_loader(self, dataset_type, data_path) -> cv2.VideoCapture:
+    def raw_loader(self, dataset_type, data_path) -> np.ndarray:
         match dataset_type:
             case "PURE":
                 pass
@@ -53,19 +52,34 @@ class Pipeline(ABC):
                 pass
             case _:
                 raise ValueError(f"{dataset_type} is invalid DATASET name")
+        return np.zeros(0)
 
-    def bronze_loader(self, data_path) -> cv2.VideoCapture:
-        pass
+    def bronze_loader(self, data_path) -> tuple[np.ndarray, np.ndarray]:
+        root = Path(data_path)
+
+        video = []
+        gt = []
+
+        for cat in root.iterdir():
+            if not cat.is_dir():
+                continue
+
+            video.append(np.load(next(cat.glob("video.npy"))))
+            gt.append(np.load(next(cat.glob("gt.npy"))))
+
+        return (np.array(video), np.array(gt))
 
     def silver_loader(self, data_path) -> np.ndarray:
-        pass
+        return np.zeros(0)
 
     def gold_loader(self, data_path) -> np.ndarray:
-        pass
+        return np.zeros(0)
 
     # Functions to process data at diffrent stages
     @abstractmethod
-    def bronze(self, data) -> list[tuple[cv2.VideoCapture, int]]:
+    def bronze(
+        self, data: np.ndarray, gt: np.ndarray, fs_start: int, fs_end: int
+    ) -> tuple[np.ndarray, np.ndarray]:
         pass
 
     @abstractmethod
