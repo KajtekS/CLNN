@@ -6,7 +6,6 @@ from TOOLS.config_parser import Layer
 from MODELS.model import Model
 from pathlib import Path
 
-
 class Pipeline(ABC):
     def __init__(self, config_path: Path) -> None:
         super().__init__()
