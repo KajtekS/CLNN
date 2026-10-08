@@ -4,6 +4,7 @@ MAIN:
 
 RAW:
   PATH: "./hello/world"
+  DATASET_NAME: "dataset-name"
 
 BRONZE:
   PATH: "./hello/world"
