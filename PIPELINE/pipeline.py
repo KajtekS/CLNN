@@ -1,10 +1,12 @@
 import cv2
 import numpy as np
+import os
 from abc import ABC, abstractmethod
 from TOOLS.config_parser import ConfigParser
 from TOOLS.config_parser import Layer
 from MODELS.model import Model
 from pathlib import Path
+from LOADER.loader import get_loader
 
 class Pipeline(ABC):
     def __init__(self, config_path: Path) -> None:
@@ -41,20 +43,11 @@ class Pipeline(ABC):
 
     # Functions to load data from diffrent stages of processing
     def raw_loader(self, dataset_type, data_path) -> np.ndarray:
-        match dataset_type:
-            case "PURE":
-                pass
-            case "rPPG":
-                pass
-            case "PHYS":
-                pass
-            case "SUMS":
-                pass
-            case _:
-                raise ValueError(f"{dataset_type} is invalid DATASET name")
+        loader = get_loader(dataset_type)
+        loader()
         return np.zeros(0)
 
-    def bronze_loader(self, data_path) -> tuple[np.ndarray, np.ndarray]:
+    def matrix_loader(self, data_path: Path) -> tuple[np.ndarray, np.ndarray]:
         root = Path(data_path)
 
         video = []
@@ -69,11 +62,28 @@ class Pipeline(ABC):
 
         return (np.array(video), np.array(gt))
 
-    def silver_loader(self, data_path) -> np.ndarray:
-        return np.zeros(0)
+    def save_stage(
+            self,
+            data: list[tuple[np.ndarray, np.ndarray]],
+            data_path: Path, hash, stage
+    ) -> None:
+        """Save processed data to a pipeline stage.
 
-    def gold_loader(self, data_path) -> np.ndarray:
-        return np.zeros(0)
+        Args:
+            data: List of video matrices and corresponding ground-truth signals.
+            data_path: Root directory where the data should be saved.
+            hash: Hash identifying the configuration used to generate the data.
+            stage: Pipeline stage name, e.g. "BRONZE".
+
+        """
+        dir_path = data_path / stage / hash
+
+        for i, (matrix, gt) in enumerate(data):
+            subject_dir = dir_path / f"subject_{i}"
+            subject_dir.mkdir(parents=True, exist_ok=True)
+
+            np.save(subject_dir / "video.npy", matrix)
+            np.save(subject_dir / "gt.npy", gt)
 
     # Functions to process data at diffrent stages
     @abstractmethod
