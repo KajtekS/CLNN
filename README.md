@@ -1,2 +1,2 @@
 # CLNN
-CLNN implemented in medallions architecture
+CLNN implemented in medallions architecture.
