@@ -44,8 +44,31 @@ class Pipeline(ABC):
     # Functions to load data from diffrent stages of processing
     def raw_loader(self, dataset_type, data_path) -> np.ndarray:
         loader = get_loader(dataset_type)
-        loader()
-        return np.zeros(0)
+        data = loader.load_data(data_path)
+
+        matixes = []
+
+        for subject in data:
+            sub_id = subject["subject"]
+            video_path = subject["video_path"]
+            gt_path = subject["gt_path"]
+
+            cap = cv2.VideoCapture(video_path)
+            frames = []
+
+            while True:
+                ret, frame = cap.read()
+
+                if not ret:
+                    break
+                frames.append(frame)
+
+            cap.release()
+
+            matixes.append(np.array(frames))
+
+
+        return data
 
     def matrix_loader(self, data_path: Path) -> tuple[np.ndarray, np.ndarray]:
         root = Path(data_path)
