@@ -47,17 +47,19 @@ class Pipeline(ABC):
     def raw_loader(self, dataset_name, data_path) -> tuple[np.ndarray, np.ndarray]:
         samples = get_loader(dataset_name).load_data(data_path)
 
-        raw_data = []
+        matrixes = []
+        gts = []
 
         for sample in samples:
             video_path = sample["video_path"]
             gt_path = sample["gt_path"]
 
-            matrix, gt = get_dataset_reader(dataset_name).read(video_path, gt_path)
+            m, gt = get_dataset_reader(dataset_name).read(video_path, gt_path)
 
-            raw_data.append((matrix, gt))
+            matrixes.append(m)
+            gts.append(gt)
 
-        return data
+        return (np.array(matrixes), np.array(gts))
 
     def matrix_loader(self, data_path: Path) -> tuple[np.ndarray, np.ndarray]:
         root = Path(data_path)
