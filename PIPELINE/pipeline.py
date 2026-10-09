@@ -8,6 +8,7 @@ from MODELS.model import Model
 from pathlib import Path
 from LOADER.loader import get_loader
 
+
 class Pipeline(ABC):
     def __init__(self, config_path: Path) -> None:
         super().__init__()
@@ -67,7 +68,6 @@ class Pipeline(ABC):
 
             matixes.append(np.array(frames))
 
-
         return data
 
     def matrix_loader(self, data_path: Path) -> tuple[np.ndarray, np.ndarray]:
@@ -86,9 +86,7 @@ class Pipeline(ABC):
         return (np.array(video), np.array(gt))
 
     def save_stage(
-            self,
-            data: list[tuple[np.ndarray, np.ndarray]],
-            data_path: Path, hash, stage
+        self, data: list[tuple[np.ndarray, np.ndarray]], data_path: Path, hash, stage
     ) -> None:
         """Save processed data to a pipeline stage.
 

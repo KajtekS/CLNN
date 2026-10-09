@@ -35,8 +35,9 @@ def test_bronze_loader(tmp_path):
     assert any(np.array_equal(x, gt1) for x in gt_out)
     assert any(np.array_equal(x, gt2) for x in gt_out)
 
+
 def test_save_stage(tmp_path):
-    data = [(np.ones((3,3,3)), np.zeros(3)) for _ in range(3)]
+    data = [(np.ones((3, 3, 3)), np.zeros(3)) for _ in range(3)]
     pipe = Piper(Path("."))
     pipe.save_stage(data, tmp_path, "0x64", "BRONZE")
 
@@ -54,5 +55,6 @@ def test_save_stage(tmp_path):
 
         np.testing.assert_array_equal(matrix, data[i][0])
         np.testing.assert_array_equal(gt, data[i][1])
+
 
 # endregion

@@ -24,7 +24,7 @@ class SumsLoader(loader):
         path/060200/v01/BVP.csv
         """
         data = []
-        subject_dirs = list(Path(path).glob('0602*'))
+        subject_dirs = list(Path(path).glob("0602*"))
 
         for subj_dir in subject_dirs:
             subject_id = subj_dir.name
@@ -34,15 +34,17 @@ class SumsLoader(loader):
                 if not task_dir.is_dir():
                     continue
 
-                vid_files = list(task_dir.glob('*face.avi'))
-                bvp_file = task_dir / 'BVP.csv'
+                vid_files = list(task_dir.glob("*face.avi"))
+                bvp_file = task_dir / "BVP.csv"
 
                 if vid_files and bvp_file.exists():
-                    data.append({
-                        'subject': f"{subject_id}_{task.name}",
-                        'video_path': str(vid_files[0]),
-                        'gt_path': str(bvp_file)
-                    })
+                    data.append(
+                        {
+                            "subject": f"{subject_id}_{task.name}",
+                            "video_path": str(vid_files[0]),
+                            "gt_path": str(bvp_file),
+                        }
+                    )
         return data
 
 
@@ -66,11 +68,13 @@ class UbfcPhysLoader(loader):
             gt_path = dir_name / f"bvp_{index}.csv"
 
             if gt_path.exists():
-                data.append({
-                    'subject': index,
-                    'video_path': str(vid_path),
-                    'gt_path': str(gt_path)
-                })
+                data.append(
+                    {
+                        "subject": index,
+                        "video_path": str(vid_path),
+                        "gt_path": str(gt_path),
+                    }
+                )
         return data
 
 
@@ -90,11 +94,13 @@ class UbfcRppgLoader(loader):
             gt_path = subj_dir / "ground_truth.txt"
 
             if vid_path.exists() and gt_path.exists():
-                data.append({
-                    'subject': subj_dir.name,
-                    'video_path': str(vid_path),
-                    'gt_path': str(gt_path)
-                })
+                data.append(
+                    {
+                        "subject": subj_dir.name,
+                        "video_path": str(vid_path),
+                        "gt_path": str(gt_path),
+                    }
+                )
         return data
 
 
@@ -116,24 +122,28 @@ class PureLoader(loader):
             gt_path = subj_dir / f"{filename}.json"
 
             if vid_path.exists() and gt_path.exists():
-                data.append({
-                    'subject': filename,
-                    'video_path': str(vid_path),
-                    'gt_path': str(gt_path)
-                })
+                data.append(
+                    {
+                        "subject": filename,
+                        "video_path": str(vid_path),
+                        "gt_path": str(gt_path),
+                    }
+                )
         return data
 
 
 def get_loader(dataset_name: str) -> type[loader]:
     """Factory method to return the appropriate loader based on the config."""
     loaders = {
-        'SUMS': SumsLoader,
-        'UBFC-PHYS': UbfcPhysLoader,
-        'UBFC-RPPG': UbfcRppgLoader,
-        'PURE': PureLoader
+        "SUMS": SumsLoader,
+        "UBFC-PHYS": UbfcPhysLoader,
+        "UBFC-RPPG": UbfcRppgLoader,
+        "PURE": PureLoader,
     }
     dataset_name = dataset_name.upper()
     if dataset_name not in loaders:
-        raise ValueError(f"Unsupported dataset: {dataset_name}. Available: {list(loaders.keys())}")
-    
+        raise ValueError(
+            f"Unsupported dataset: {dataset_name}. Available: {list(loaders.keys())}"
+        )
+
     return loaders[dataset_name]
