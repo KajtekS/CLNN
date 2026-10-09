@@ -7,6 +7,7 @@ from TOOLS.config_parser import Layer
 from MODELS.model import Model
 from pathlib import Path
 from LOADER.loader import get_loader
+from LOADER.readers import get_dataset_reader
 
 
 class Pipeline(ABC):
@@ -43,30 +44,18 @@ class Pipeline(ABC):
         return data
 
     # Functions to load data from diffrent stages of processing
-    def raw_loader(self, dataset_type, data_path) -> np.ndarray:
-        loader = get_loader(dataset_type)
-        data = loader.load_data(data_path)
+    def raw_loader(self, dataset_name, data_path) -> tuple[np.ndarray, np.ndarray]:
+        samples = get_loader(dataset_name).load_data(data_path)
 
-        matixes = []
+        raw_data = []
 
-        for subject in data:
-            sub_id = subject["subject"]
-            video_path = subject["video_path"]
-            gt_path = subject["gt_path"]
+        for sample in samples:
+            video_path = sample["video_path"]
+            gt_path = sample["gt_path"]
 
-            cap = cv2.VideoCapture(video_path)
-            frames = []
+            matrix, gt = get_dataset_reader(dataset_name).read(video_path, gt_path)
 
-            while True:
-                ret, frame = cap.read()
-
-                if not ret:
-                    break
-                frames.append(frame)
-
-            cap.release()
-
-            matixes.append(np.array(frames))
+            raw_data.append((matrix, gt))
 
         return data
 

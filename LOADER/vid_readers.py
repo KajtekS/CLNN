@@ -67,17 +67,15 @@ class PngReader(Reader):
 
         return np.stack(frames)
 
+
 def get_reader(video_type: str) -> type[Reader]:
     """Factory method to run reading videos"""
-    readers = {
-        "AVI": AviReader,
-        "PNG": PngReader
-    }
+    readers = {"AVI": AviReader, "PNG": PngReader}
     video_type = video_type.upper()
 
     if video_type not in readers:
         raise ValueError(
             f"Unsupported reader filetype: {video_type}. Available: {list(readers.keys())}"
         )
-    
+
     return readers[video_type]

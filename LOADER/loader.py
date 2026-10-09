@@ -1,11 +1,18 @@
 from pathlib import Path
 from abc import ABC, abstractmethod
+from typing import TypedDict
+
+
+class PathsDict(TypedDict):
+    subject: str
+    video_path: Path
+    gt_path: Path
 
 
 class loader(ABC):
     @abstractmethod
     @staticmethod
-    def load_data(path) -> list[dict[str, str]]:
+    def load_data(path) -> list[PathsDict]:
         """
         Returns a list of dictionaries with standardized keys:
         - 'subject': patient / experiment ID
@@ -41,8 +48,8 @@ class SumsLoader(loader):
                     data.append(
                         {
                             "subject": f"{subject_id}_{task.name}",
-                            "video_path": str(vid_files[0]),
-                            "gt_path": str(bvp_file),
+                            "video_path": vid_files[0],
+                            "gt_path": bvp_file,
                         }
                     )
         return data
@@ -71,8 +78,8 @@ class UbfcPhysLoader(loader):
                 data.append(
                     {
                         "subject": index,
-                        "video_path": str(vid_path),
-                        "gt_path": str(gt_path),
+                        "video_path": vid_path,
+                        "gt_path": gt_path,
                     }
                 )
         return data
@@ -97,8 +104,8 @@ class UbfcRppgLoader(loader):
                 data.append(
                     {
                         "subject": subj_dir.name,
-                        "video_path": str(vid_path),
-                        "gt_path": str(gt_path),
+                        "video_path": vid_path,
+                        "gt_path": gt_path,
                     }
                 )
         return data
@@ -125,8 +132,8 @@ class PureLoader(loader):
                 data.append(
                     {
                         "subject": filename,
-                        "video_path": str(vid_path),
-                        "gt_path": str(gt_path),
+                        "video_path": vid_path,
+                        "gt_path": gt_path,
                     }
                 )
         return data

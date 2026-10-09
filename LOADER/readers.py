@@ -1,4 +1,3 @@
-
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
@@ -14,39 +13,27 @@ from LOADER.vid_readers import get_reader
 class Reader(ABC):
     @staticmethod
     @abstractmethod
-    def read(
-        video_path: Path,
-        gt_path: Path
-    ) -> tuple[np.ndarray, np.ndarray]:
+    def read(video_path: Path, gt_path: Path) -> tuple[np.ndarray, np.ndarray]:
         pass
 
 
 class SumsReader(Reader):
     @staticmethod
-    def read(
-        video_path: Path,
-        gt_path: Path
-    ) -> tuple[np.ndarray, np.ndarray]:
+    def read(video_path: Path, gt_path: Path) -> tuple[np.ndarray, np.ndarray]:
 
         matrix_video = get_reader("AVI").read_video(video_path)
 
-        # SUMS: columns "timestamp" and "bvp"
         bvp_data = pd.read_csv(gt_path)
         signal_gt = bvp_data["bvp"].to_numpy(dtype=np.float64)
 
         return matrix_video, signal_gt
 
-class UbfcPhysReader(Reader):
 
+class UbfcPhysReader(Reader):
     @staticmethod
-    def read(
-        video_path: Path,
-        gt_path: Path
-    ) -> tuple[np.ndarray, np.ndarray]:
+    def read(video_path: Path, gt_path: Path) -> tuple[np.ndarray, np.ndarray]:
 
         matrix_video = get_reader("AVI").read_video(video_path)
-
-        # UBFC-PHYS: one BVP value per CSV row
         signal_gt = []
 
         with open(gt_path, "r", newline="") as file:
@@ -60,17 +47,11 @@ class UbfcPhysReader(Reader):
 
 
 class UbfcRppgReader(Reader):
-
     @staticmethod
-    def read(
-        video_path: Path,
-        gt_path: Path
-    ) -> tuple[np.ndarray, np.ndarray]:
+    def read(video_path: Path, gt_path: Path) -> tuple[np.ndarray, np.ndarray]:
 
         matrix_video = get_reader("AVI").read_video(video_path)
 
-        # UBFC-rPPG: BVP values are on the first line,
-        # separated by whitespace.
         with open(gt_path, "r", encoding="utf-8") as file:
             first_line = file.readline()
 
@@ -80,24 +61,18 @@ class UbfcRppgReader(Reader):
 
 
 class PureReader(Reader):
-
     @staticmethod
-    def read(
-        video_path: Path,
-        gt_path: Path
-    ) -> tuple[np.ndarray, np.ndarray]:
+    def read(video_path: Path, gt_path: Path) -> tuple[np.ndarray, np.ndarray]:
 
         matrix_video = get_reader("PNG").read_video(video_path)
 
-        # PURE: BVP is stored under Value.waveform
         with open(gt_path, "r", encoding="utf-8") as file:
             data: dict[str, Any] = json.load(file)
 
         package = data["/FullPackage"]
 
         signal_gt = np.asarray(
-            [entry["Value"]["waveform"] for entry in package],
-            dtype=np.float64
+            [entry["Value"]["waveform"] for entry in package], dtype=np.float64
         )
 
         return matrix_video, signal_gt
@@ -117,8 +92,7 @@ def get_dataset_reader(dataset_name: str) -> type[Reader]:
 
     if dataset_name not in readers:
         raise ValueError(
-            f"Unsupported dataset: {dataset_name}. "
-            f"Available: {list(readers.keys())}"
+            f"Unsupported dataset: {dataset_name}. Available: {list(readers.keys())}"
         )
 
     return readers[dataset_name]
