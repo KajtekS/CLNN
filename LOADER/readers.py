@@ -32,31 +32,9 @@ class SumsReader(Reader):
 
         # SUMS: columns "timestamp" and "bvp"
         bvp_data = pd.read_csv(gt_path)
-
-        bvp_timestamps = bvp_data["timestamp"].to_numpy()
-        signal = bvp_data["bvp"].to_numpy(dtype=np.float64)
-
-        timestamp_path = gt_path.parent / "frames_timestamp.csv"
-        frame_timestamps = pd.read_csv(timestamp_path)["timestamp"].to_numpy()
-
-        # Find the nearest BVP sample for every video frame
-        indices = np.searchsorted(bvp_timestamps, frame_timestamps)
-
-        indices = np.clip(indices, 1, len(bvp_timestamps) - 1)
-
-        left = indices - 1
-        right = indices
-
-        choose_right = (
-            np.abs(bvp_timestamps[right] - frame_timestamps)
-            < np.abs(bvp_timestamps[left] - frame_timestamps)
-        )
-
-        nearest_indices = np.where(choose_right, right, left)
-        signal_gt = signal[nearest_indices]
+        signal_gt = bvp_data["bvp"].to_numpy(dtype=np.float64)
 
         return matrix_video, signal_gt
-
 
 class UbfcPhysReader(Reader):
 
