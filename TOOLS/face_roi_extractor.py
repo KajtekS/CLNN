@@ -1,18 +1,22 @@
-import cv2
 import time
-import mediapipe as mp
+from typing import ClassVar
+
+import cv2
 import numpy as np
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision
+from mediapipe.tasks.python.vision.face_landmarker import FaceLandmarkerResult
+
+import mediapipe as mp
 
 
 class FaceRoiExtractor:
-    FACE_REGION_TO_INDEX = {
+    FACE_REGION_TO_INDEX: ClassVar[dict[str, int]] = {
         "FOREHEAD": 0,
         "CHEEK_L": 1,
         "CHEEK_R": 2
     }
-    FACE_REGIONS = {
+    FACE_REGIONS: ClassVar[dict[str, list[int]]] = {
         "FOREHEAD": [9, 10, 66, 67, 69, 103, 104, 105, 107, 108, 109, 151, 296, 297, 299, 332, 333, 334, 336, 337, 338],
         "CHEEK_L": [36, 50, 101, 111, 116, 117, 118, 119, 123, 135, 137, 138, 147, 177, 187,192, 205, 206, 207, 212, 213, 214, 215, 216, 227],
         "CHEEK_R": [266, 280, 330, 340, 345, 346, 347, 348, 352, 364, 366, 367, 376, 401, 411, 416, 425, 426, 427, 432, 433, 434, 435, 436, 447]
@@ -27,14 +31,14 @@ class FaceRoiExtractor:
         )
         self.landmarker = vision.FaceLandmarker.create_from_options(opts)
         
-    def detect_landmarks(self, frame_bgr: np.ndarray) -> vision.FaceLandmarkerResult:
+    def detect_landmarks(self, frame_bgr: np.ndarray) -> FaceLandmarkerResult:
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         now = int(time.monotonic() * 1000)
         image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
         result = self.landmarker.detect_for_video(image, now)
         return result
 
-    def draw_landmarks(self, frame_bgr: np.ndarray, result: vision.FaceLandmarkerResult) -> np.ndarray:
+    def draw_landmarks(self, frame_bgr: np.ndarray, result: FaceLandmarkerResult) -> np.ndarray:
         landmarked_frame = frame_bgr.copy()
 
         if result.face_landmarks:
@@ -58,8 +62,7 @@ class FaceRoiExtractor:
 
         return landmarked_frame
 
-    def extract_face_roi(self, frame_bgr: np.ndarray, result: vision.FaceLandmarkerResult) -> np.ndarray | None:
-        """Return a 256x256 BGR canvas: forehead above left and right cheeks."""
+    def extract_face_roi(self, frame_bgr: np.ndarray, result: FaceLandmarkerResult) -> np.ndarray | None:
         if not result.face_landmarks or not result.face_landmarks[0]:
             return None
 

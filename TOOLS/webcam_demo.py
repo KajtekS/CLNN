@@ -1,9 +1,7 @@
 import cv2
-
 from PROCESING.preproc import Preproc
+
 from TOOLS.face_roi_extractor import FaceRoiExtractor
-
-
 
 if __name__ == "__main__":
     frame_count = 0
@@ -25,16 +23,6 @@ if __name__ == "__main__":
             frame = cv2.flip(frame, 1)
 
             frame_bgr = frame.copy()
-            face_bgr = None
-            if frame_count >= 30:
-                # bbox = preprocessor.detect_face(frame_bgr)
-                frame_count = 0
-            if bbox:
-                x1, y1, x2, y2 = bbox
-                x1, x2 = max(0, x1), min(frame_bgr.shape[1], x2)
-                y1, y2 = max(0, y1), min(frame_bgr.shape[0], y2)
-                if x2 > x1 and y2 > y1:
-                    face_bgr = frame_bgr[y1:y2, x1:x2]
             result = face_roi_extractor.detect_landmarks(frame_bgr)
             ladmarked_frame = face_roi_extractor.draw_landmarks(frame_bgr, result)
             face_rois = face_roi_extractor.extract_face_roi(frame_bgr, result)

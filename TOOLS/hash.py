@@ -1,10 +1,11 @@
-from pathlib import Path
 import hashlib
-import yaml
 import json
+from pathlib import Path
+
+import yaml
+
 
 def hash_yaml(path: Path, size = 16) -> str:
-    m = hashlib.sha256()
     with open(path, 'r') as f:
         data = yaml.load(f, Loader=yaml.SafeLoader)
 
