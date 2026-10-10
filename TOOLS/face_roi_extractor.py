@@ -38,7 +38,7 @@ class FaceRoiExtractor:
         result = self.landmarker.detect_for_video(image, now)
         return result
 
-    def draw_landmarks(self, frame_bgr: np.ndarray, result: FaceLandmarkerResult) -> np.ndarray:
+    def draw_landmarks(self, frame_bgr: np.ndarray, result: FaceLandmarkerResult, draw_indices:bool=False) -> np.ndarray:
         landmarked_frame = frame_bgr.copy()
 
         if result.face_landmarks:
@@ -52,13 +52,13 @@ class FaceRoiExtractor:
                     y = int(landmark.y * landmarked_frame.shape[0])
                     depth = (landmark.z - nearest_z) / depth_range if depth_range > 0 else 0.0
                     intensity = round(50 + 205 * (1.0 - depth) ** 2.5)
-                    
+
+                    if draw_indices:
+                        cv2.putText(landmarked_frame, str(i), (x + 5, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 0), 1)
                     if any(i in indices for indices in self.FACE_REGIONS.values()):
                         cv2.circle(landmarked_frame, (x, y), 2, (intensity, 0, 0), -1)
-                        # cv2.putText(overlay, str(i), (x + 5, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 1)
                         continue
                     cv2.circle(landmarked_frame, (x, y), 2, (0, intensity, 0), -1)
-                    # cv2.putText(overlay, str(i), (x + 5, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 0), 1)
 
         return landmarked_frame
 

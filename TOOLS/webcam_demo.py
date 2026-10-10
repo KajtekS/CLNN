@@ -24,14 +24,14 @@ if __name__ == "__main__":
 
             frame_bgr = frame.copy()
             result = face_roi_extractor.detect_landmarks(frame_bgr)
-            ladmarked_frame = face_roi_extractor.draw_landmarks(frame_bgr, result)
+            ladmarked_frame = face_roi_extractor.draw_landmarks(frame_bgr, result, draw_indices=False)
             face_rois = face_roi_extractor.extract_face_roi(frame_bgr, result)
             if face_rois is not None:
                 cv2.imshow("Face ROIs", face_rois)
             cv2.imshow("Webcam", frame)
             cv2.imshow("Landmarks", ladmarked_frame)
 
-            key = cv2.waitKey(1) & 0xFF      # waits 1 ms, returns -1 if no key pressed
+            key = cv2.waitKey(1) & 0xFF # waits 1 ms, returns -1 if no key pressed
             if key == ord("q"):
                 break
 
