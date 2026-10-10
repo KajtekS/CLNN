@@ -27,7 +27,7 @@ if __name__ == "__main__":
             frame_bgr = frame.copy()
             face_bgr = None
             if frame_count >= 30:
-                bbox = preprocessor.detect_face(frame_bgr)
+                # bbox = preprocessor.detect_face(frame_bgr)
                 frame_count = 0
             if bbox:
                 x1, y1, x2, y2 = bbox
@@ -36,12 +36,12 @@ if __name__ == "__main__":
                 if x2 > x1 and y2 > y1:
                     face_bgr = frame_bgr[y1:y2, x1:x2]
             result = face_roi_extractor.detect_landmarks(frame_bgr)
-            frame_landmarks = face_roi_extractor.draw_landmarks(frame_bgr, result)
-
+            ladmarked_frame = face_roi_extractor.draw_landmarks(frame_bgr, result)
+            face_rois = face_roi_extractor.extract_face_roi(frame_bgr, result)
+            if face_rois is not None:
+                cv2.imshow("Face ROIs", face_rois)
             cv2.imshow("Webcam", frame)
-            if face_bgr is not None:
-                cv2.imshow("Face", face_bgr)
-            cv2.imshow("Landmarks", frame_landmarks)
+            cv2.imshow("Landmarks", ladmarked_frame)
 
             key = cv2.waitKey(1) & 0xFF      # waits 1 ms, returns -1 if no key pressed
             if key == ord("q"):
