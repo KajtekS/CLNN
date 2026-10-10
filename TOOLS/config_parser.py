@@ -1,5 +1,6 @@
-import yaml
 from enum import Enum
+
+import yaml
 
 
 class ConfigParser:
