@@ -8,7 +8,7 @@ class Preproc:
     def __init__(self) -> None:
         self.model = YOLO("TOOLS/yolov8/yolov8n-face.pt")
 
-    def proces(self, vid, recenter, square_size):
+    def process(self, vid, recenter, square_size):
         count = recenter
         cor = None
         frames = []
@@ -21,7 +21,7 @@ class Preproc:
                 break
 
             if count == 0:
-                cor = self.face_detector(img)
+                cor = self.detect_face(img)
                 count = recenter
 
             if cor is not None:
@@ -40,7 +40,7 @@ class Preproc:
 
         return diff
 
-    def face_detector(self, img: NDArray[np.uint8]) -> tuple[int, int, int, int] | None:
+    def detect_face(self, img: NDArray[np.uint8]) -> tuple[int, int, int, int] | None:
         results = self.model(img)
         faces = []
 
