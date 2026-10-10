@@ -1,12 +1,18 @@
-import os
-import glob
+from pathlib import Path
 from abc import ABC, abstractmethod
+from typing import TypedDict
+
+
+class PathsDict(TypedDict):
+    subject: str
+    video_path: Path
+    gt_path: Path
 
 
 class loader(ABC):
     @abstractmethod
     @staticmethod
-    def load_data(path):
+    def load_data(path) -> list[PathsDict]:
         """
         Returns a list of dictionaries with standardized keys:
         - 'subject': patient / experiment ID
@@ -25,25 +31,27 @@ class SumsLoader(loader):
         path/060200/v01/BVP.csv
         """
         data = []
-        subject_dirs = glob.glob(os.path.join(path, '0602*'))
-        
+        subject_dirs = list(Path(path).glob("0602*"))
+
         for subj_dir in subject_dirs:
-            subject_id = os.path.basename(subj_dir)
-            
-            for task in os.listdir(subj_dir):
-                task_dir = os.path.join(subj_dir, task)
-                if not os.path.isdir(task_dir):
+            subject_id = subj_dir.name
+
+            for task in subj_dir.iterdir():
+                task_dir = task
+                if not task_dir.is_dir():
                     continue
-                
-                vid_files = glob.glob(os.path.join(task_dir, '*face.avi'))
-                bvp_file = os.path.join(task_dir, 'BVP.csv')
-                
-                if vid_files and os.path.exists(bvp_file):
-                    data.append({
-                        'subject': f"{subject_id}_{task}",
-                        'video_path': vid_files[0],
-                        'gt_path': bvp_file
-                    })
+
+                vid_files = list(task_dir.glob("*face.avi"))
+                bvp_file = task_dir / "BVP.csv"
+
+                if vid_files and bvp_file.exists():
+                    data.append(
+                        {
+                            "subject": f"{subject_id}_{task.name}",
+                            "video_path": vid_files[0],
+                            "gt_path": bvp_file,
+                        }
+                    )
         return data
 
 
@@ -56,22 +64,24 @@ class UbfcPhysLoader(loader):
         path/s1/bvp_s1_T1.csv
         """
         data = []
-        vid_files = glob.glob(os.path.join(path, "s*", "vid_*.avi"))
-        
+        vid_files = list(Path(path).glob("s*/vid_*.avi"))
+
         for vid_path in vid_files:
-            dir_name = os.path.dirname(vid_path)
-            file_name = os.path.basename(vid_path)
-            
+            dir_name = vid_path.parent
+            file_name = vid_path.name
+
             index = file_name.replace("vid_", "").replace(".avi", "")
-            
-            gt_path = os.path.join(dir_name, f"bvp_{index}.csv")
-            
-            if os.path.exists(gt_path):
-                data.append({
-                    'subject': index,
-                    'video_path': vid_path,
-                    'gt_path': gt_path
-                })
+
+            gt_path = dir_name / f"bvp_{index}.csv"
+
+            if gt_path.exists():
+                data.append(
+                    {
+                        "subject": index,
+                        "video_path": vid_path,
+                        "gt_path": gt_path,
+                    }
+                )
         return data
 
 
@@ -84,18 +94,20 @@ class UbfcRppgLoader(loader):
         path/subject1/ground_truth.txt
         """
         data = []
-        subject_dirs = glob.glob(os.path.join(path, "subject*"))
-        
+        subject_dirs = list(Path(path).glob("subject*"))
+
         for subj_dir in subject_dirs:
-            vid_path = os.path.join(subj_dir, "vid.avi")
-            gt_path = os.path.join(subj_dir, "ground_truth.txt")
-            
-            if os.path.exists(vid_path) and os.path.exists(gt_path):
-                data.append({
-                    'subject': os.path.basename(subj_dir),
-                    'video_path': vid_path,
-                    'gt_path': gt_path
-                })
+            vid_path = subj_dir / "vid.avi"
+            gt_path = subj_dir / "ground_truth.txt"
+
+            if vid_path.exists() and gt_path.exists():
+                data.append(
+                    {
+                        "subject": subj_dir.name,
+                        "video_path": vid_path,
+                        "gt_path": gt_path,
+                    }
+                )
         return data
 
 
@@ -108,33 +120,37 @@ class PureLoader(loader):
         path/01-01/01-01.json
         """
         data = []
-        subject_dirs = glob.glob(os.path.join(path, "*-*"))
-        
+        subject_dirs = list(Path(path).glob("*-*"))
+
         for subj_dir in subject_dirs:
-            filename = os.path.basename(subj_dir)
-            
-            vid_path = os.path.join(subj_dir, filename) 
-            gt_path = os.path.join(subj_dir, f"{filename}.json")
-            
-            if os.path.exists(vid_path) and os.path.exists(gt_path):
-                data.append({
-                    'subject': filename,
-                    'video_path': vid_path,
-                    'gt_path': gt_path
-                })
+            filename = subj_dir.name
+
+            vid_path = subj_dir / filename
+            gt_path = subj_dir / f"{filename}.json"
+
+            if vid_path.exists() and gt_path.exists():
+                data.append(
+                    {
+                        "subject": filename,
+                        "video_path": vid_path,
+                        "gt_path": gt_path,
+                    }
+                )
         return data
 
 
-def get_loader(dataset_name: str) -> loader:
+def get_loader(dataset_name: str) -> type[loader]:
     """Factory method to return the appropriate loader based on the config."""
     loaders = {
-        'SUMS': SumsLoader,
-        'UBFC-PHYS': UbfcPhysLoader,
-        'UBFC-RPPG': UbfcRppgLoader,
-        'PURE': PureLoader
+        "SUMS": SumsLoader,
+        "UBFC-PHYS": UbfcPhysLoader,
+        "UBFC-RPPG": UbfcRppgLoader,
+        "PURE": PureLoader,
     }
     dataset_name = dataset_name.upper()
     if dataset_name not in loaders:
-        raise ValueError(f"Unsupported dataset: {dataset_name}. Available: {list(loaders.keys())}")
-    
+        raise ValueError(
+            f"Unsupported dataset: {dataset_name}. Available: {list(loaders.keys())}"
+        )
+
     return loaders[dataset_name]
