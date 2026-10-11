@@ -1,5 +1,5 @@
 import cv2
-from PROCESING.preproc import Preproc
+from PROCESSING.preproc import Preproc
 
 from TOOLS.face_roi_extractor import FaceRoiExtractor
 
