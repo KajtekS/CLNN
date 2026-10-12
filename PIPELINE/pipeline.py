@@ -88,7 +88,7 @@ class Pipeline(ABC):
     # Functions to process data at diffrent stages
     @abstractmethod
     def bronze(
-        self, data: np.ndarray, gt: np.ndarray, fs_start: int, fs_end: int
+        self, data: np.ndarray, gt: np.ndarray, fs_start: int, fs_gt_start: int, fs_end: int
     ) -> tuple[np.ndarray, np.ndarray]:
         pass
 

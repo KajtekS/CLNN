@@ -10,8 +10,8 @@ class PathsDict(TypedDict):
 
 
 class loader(ABC):
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def load_data(path) -> list[PathsDict]:
         """
         Returns a list of dictionaries with standardized keys:

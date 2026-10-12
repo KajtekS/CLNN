@@ -56,5 +56,4 @@ def test_save_stage(tmp_path):
         np.testing.assert_array_equal(matrix, data[i][0])
         np.testing.assert_array_equal(gt, data[i][1])
 
-
 # endregion
