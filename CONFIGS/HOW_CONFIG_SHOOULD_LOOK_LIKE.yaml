@@ -12,6 +12,10 @@ BRONZE:
   DOWN_SAMPLE:
     DO: "YES"
     FS: 30
+  GT_FS: 30:
+  DOWN_SAMPLE_GT:
+    DO: "YES"
+    FS: 30
   
 SILVER:
   PATH: "./hello/world"
