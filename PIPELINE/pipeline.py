@@ -2,12 +2,11 @@ import cv2
 import numpy as np
 import os
 from abc import ABC, abstractmethod
-from TOOLS.config_parser import ConfigParser
-from TOOLS.config_parser import Layer
 from MODELS.model import Model
 from pathlib import Path
 from LOADER.loader import get_loader
 from LOADER.readers import get_dataset_reader
+from CONFIGS.yaml_class import Config, ConfigLoader
 
 
 class Pipeline(ABC):
@@ -15,33 +14,22 @@ class Pipeline(ABC):
         super().__init__()
         # self.config = ConfigParser.parse(config_path)
 
-    def run(self) -> np.ndarray:
-        layer = self.config.main.PROCESS_LAYER
+    def run(self, config_path: Path) -> np.ndarray:
+        config = ConfigLoader.load(config_path)
 
-        # Stage of loading and processing data
-        match layer:
-            case 0:
-                data = self.raw_loader(self.config.main.DATASET, self.config.raw.PATH)
-                data = self.bronze(data)
-                data = self.silver(data)
-                data = self.gold(data)
+        match config.MAIN.PROCESS_LAYER:
+            case 'bronze':
+                data = self.matrix_loader(config.BRONZE.PATH)
 
-            case 1:
-                data = self.bronze_loader(self.config.bronze.PATH)
-                data = self.silver(data)
-                data = self.gold(data)
+                for video_data, gt_data in zip(*data):
+                    pass
+                
+            case 'silver':
+                pass
+            case 'gold':
+                pass
 
-            case 2:
-                data = self.silver_loader(self.config.silver.PATH)
-                data = self.gold(data)
-
-            case 3:
-                data = self.gold_loader(self.config.gold.PATH)
-
-            case _:
-                raise ValueError(f"Invalid PROCESS_LAYER: {layer}")
-
-        return data
+        return np.zeros(0)
 
     # Functions to load data from diffrent stages of processing
     def raw_loader(self, dataset_name, data_path) -> tuple[np.ndarray, np.ndarray]:

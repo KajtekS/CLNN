@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Literal
 import yaml
 
-
 @dataclass
 class MainConfig:
     PROCESS_LAYER: Literal["raw", "bronze", "silver", "gold"]
@@ -23,6 +22,7 @@ class BronzeConfig:
     PATH: Path
     FS: int
     DOWN_SAMPLE: DownSampleConfig
+    DOWN_SAMPLE_GT: DownSampleConfig
 
 @dataclass
 class SilverConfig:
@@ -72,6 +72,10 @@ class ConfigLoader:
                 DOWN_SAMPLE=DownSampleConfig(
                     DO=data["BRONZE"]["DOWN_SAMPLE"]["DO"],
                     FS=data["BRONZE"]["DOWN_SAMPLE"]["FS"]
+                ),
+                DOWN_SAMPLE_GT=DownSampleConfig(
+                    DO=data["BRONZE"]["DOWN_SAMPLE_GT"]["DO"],
+                    FS=data["BRONZE"]["DOWN_SAMPLE_GT"]["FS"],
                 )
             ),
             SILVER=SilverConfig(
