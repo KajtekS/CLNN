@@ -19,26 +19,38 @@ class Piper(Pipeline):
         self, data: np.ndarray, gt: np.ndarray, fs_start, fs_gt_start, fs_end,
     ) -> tuple[np.ndarray, np.ndarray]:
         data_resampled = video_resampler(data, fs_start, fs_end)
-        gt_resampled = gt_resampler(data, fs_gt_start, fs_end)
+        gt_resampled = gt_resampler(gt, fs_gt_start, fs_end)
 
         return (data_resampled, gt_resampled)
 
     def silver(self, data) -> np.ndarray[tuple[Any, ...], np.dtype[Any]]:
-        data = []
+        processed_frames = []
         for frame in data:
+            if frame.dtype != np.uint8:
+                frame = np.clip(frame, 0, 255).astype(np.uint8)
             result = self.extractor.detect_landmarks(frame)
             roi = self.extractor.extract_face_roi(frame, result)
             if roi is None:
-                data.append(np.zeros((256, 256, 3)))
+                processed_frames.append(np.zeros((256, 256, 3)))
             else:
-                data.append(roi)
+                processed_frames.append(roi)
 
-        video = np.stack(data).astype(np.float32) / 255.0
+        video = np.stack(processed_frames).astype(np.float32) / 255.0
 
         #Diffrences
         video = np.diff(video, axis=0, prepend=video[:1])
         
         return video
 
-    def gold(self, data) -> np.ndarray[tuple[Any, ...], np.dtype[Any]]:
-        return super().gold(data)
+    def gold(self, data: np.ndarray, gt, chunk_size) -> tuple[np.ndarray[Any], np.ndarray[Any]]:
+        #Input shape [N, H, W, C]
+        total_frames = (len(data) // chunk_size) * chunk_size
+        data = data[:total_frames]
+        gt = gt[:total_frames]
+
+        #Spliting into chunks, we get [Batch, N, H, W, C]
+        split_points = np.arange(chunk_size, len(data), chunk_size)
+        chunked_data = np.split(data, split_points)
+        chunked_gt = np.split(gt, split_points)
+
+        return (np.stack(chunked_data), np.stack(chunked_gt))

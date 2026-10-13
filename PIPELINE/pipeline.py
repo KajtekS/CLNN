@@ -1,12 +1,12 @@
-import cv2
 import numpy as np
-import os
 from abc import ABC, abstractmethod
 from MODELS.model import Model
 from pathlib import Path
 from LOADER.loader import get_loader
 from LOADER.readers import get_dataset_reader
 from CONFIGS.yaml_class import Config, ConfigLoader
+
+from typing import Any
 
 
 class Pipeline(ABC):
@@ -97,5 +97,5 @@ class Pipeline(ABC):
         pass
 
     @abstractmethod
-    def gold(self, data) -> np.ndarray:
+    def gold(self, data, gt, chunk_size) -> tuple[np.ndarray[Any], np.ndarray[Any]]:
         pass
