@@ -24,7 +24,9 @@ from LOADER.readers import (
 from LOADER.vid_readers import AviReader, PngReader, get_reader
 
 
-def _create_dummy_avi(path: Path, num_frames: int = 3, width: int = 10, height: int = 10) -> Path:
+def _create_dummy_avi(
+    path: Path, num_frames: int = 3, width: int = 10, height: int = 10
+) -> Path:
     fourcc = cv2.VideoWriter_fourcc(*"MJPG")
     writer = cv2.VideoWriter(str(path), fourcc, 10.0, (width, height))
     for i in range(num_frames):
@@ -34,7 +36,9 @@ def _create_dummy_avi(path: Path, num_frames: int = 3, width: int = 10, height: 
     return path
 
 
-def _create_dummy_pngs(folder: Path, num_frames: int = 3, width: int = 10, height: int = 10) -> Path:
+def _create_dummy_pngs(
+    folder: Path, num_frames: int = 3, width: int = 10, height: int = 10
+) -> Path:
     folder.mkdir(parents=True, exist_ok=True)
     for i in range(num_frames):
         frame = np.full((height, width, 3), (i + 1) * 10, dtype=np.uint8)

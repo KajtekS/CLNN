@@ -14,12 +14,86 @@ class FaceRoiExtractor:
     FACE_REGION_TO_INDEX: ClassVar[dict[str, int]] = {
         "FOREHEAD": 0,
         "CHEEK_L": 1,
-        "CHEEK_R": 2
+        "CHEEK_R": 2,
     }
     FACE_REGIONS: ClassVar[dict[str, list[int]]] = {
-        "FOREHEAD": [9, 10, 66, 67, 69, 103, 104, 105, 107, 108, 109, 151, 296, 297, 299, 332, 333, 334, 336, 337, 338],
-        "CHEEK_L": [36, 50, 101, 111, 116, 117, 118, 119, 123, 135, 137, 138, 147, 177, 187,192, 205, 206, 207, 212, 213, 214, 215, 216, 227],
-        "CHEEK_R": [266, 280, 330, 340, 345, 346, 347, 348, 352, 364, 366, 367, 376, 401, 411, 416, 425, 426, 427, 432, 433, 434, 435, 436, 447]
+        "FOREHEAD": [
+            9,
+            10,
+            66,
+            67,
+            69,
+            103,
+            104,
+            105,
+            107,
+            108,
+            109,
+            151,
+            296,
+            297,
+            299,
+            332,
+            333,
+            334,
+            336,
+            337,
+            338,
+        ],
+        "CHEEK_L": [
+            36,
+            50,
+            101,
+            111,
+            116,
+            117,
+            118,
+            119,
+            123,
+            135,
+            137,
+            138,
+            147,
+            177,
+            187,
+            192,
+            205,
+            206,
+            207,
+            212,
+            213,
+            214,
+            215,
+            216,
+            227,
+        ],
+        "CHEEK_R": [
+            266,
+            280,
+            330,
+            340,
+            345,
+            346,
+            347,
+            348,
+            352,
+            364,
+            366,
+            367,
+            376,
+            401,
+            411,
+            416,
+            425,
+            426,
+            427,
+            432,
+            433,
+            434,
+            435,
+            436,
+            447,
+        ],
     }
 
     def __init__(self, path_to_model: str):
@@ -27,10 +101,10 @@ class FaceRoiExtractor:
             base_options=mp_python.BaseOptions(model_asset_path=path_to_model),
             running_mode=vision.RunningMode.VIDEO,
             output_face_blendshapes=False,
-            num_faces=1,    
+            num_faces=1,
         )
         self.landmarker = vision.FaceLandmarker.create_from_options(opts)
-        
+
     def detect_landmarks(self, frame_bgr: np.ndarray) -> FaceLandmarkerResult:
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         now = int(time.monotonic() * 1000)
@@ -38,7 +112,12 @@ class FaceRoiExtractor:
         result = self.landmarker.detect_for_video(image, now)
         return result
 
-    def draw_landmarks(self, frame_bgr: np.ndarray, result: FaceLandmarkerResult, draw_indices:bool=False) -> np.ndarray:
+    def draw_landmarks(
+        self,
+        frame_bgr: np.ndarray,
+        result: FaceLandmarkerResult,
+        draw_indices: bool = False,
+    ) -> np.ndarray:
         landmarked_frame = frame_bgr.copy()
 
         if result.face_landmarks:
@@ -50,11 +129,23 @@ class FaceRoiExtractor:
                 for i, landmark in enumerate(landmarks):
                     x = int(landmark.x * frame_bgr.shape[1])
                     y = int(landmark.y * landmarked_frame.shape[0])
-                    depth = (landmark.z - nearest_z) / depth_range if depth_range > 0 else 0.0
+                    depth = (
+                        (landmark.z - nearest_z) / depth_range
+                        if depth_range > 0
+                        else 0.0
+                    )
                     intensity = round(50 + 205 * (1.0 - depth) ** 2.5)
 
                     if draw_indices:
-                        cv2.putText(landmarked_frame, str(i), (x + 5, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 0), 1)
+                        cv2.putText(
+                            landmarked_frame,
+                            str(i),
+                            (x + 5, y - 5),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.4,
+                            (255, 0, 0),
+                            1,
+                        )
                     if any(i in indices for indices in self.FACE_REGIONS.values()):
                         cv2.circle(landmarked_frame, (x, y), 2, (intensity, 0, 0), -1)
                         continue
@@ -62,7 +153,9 @@ class FaceRoiExtractor:
 
         return landmarked_frame
 
-    def extract_face_roi(self, frame_bgr: np.ndarray, result: FaceLandmarkerResult) -> np.ndarray | None:
+    def extract_face_roi(
+        self, frame_bgr: np.ndarray, result: FaceLandmarkerResult
+    ) -> np.ndarray | None:
         if not result.face_landmarks or not result.face_landmarks[0]:
             return None
 

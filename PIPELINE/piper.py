@@ -16,7 +16,12 @@ class Piper(Pipeline):
         self.extractor = FaceRoiExtractor("TOOLS/mediapipe/face_landmarker.task")
 
     def bronze(
-        self, data: np.ndarray, gt: np.ndarray, fs_start, fs_gt_start, fs_end,
+        self,
+        data: np.ndarray,
+        gt: np.ndarray,
+        fs_start,
+        fs_gt_start,
+        fs_end,
     ) -> tuple[np.ndarray, np.ndarray]:
         data_resampled = video_resampler(data, fs_start, fs_end)
         gt_resampled = gt_resampler(gt, fs_gt_start, fs_end)
@@ -37,18 +42,20 @@ class Piper(Pipeline):
 
         video = np.stack(processed_frames).astype(np.float32) / 255.0
 
-        #Diffrences
+        # Diffrences
         video = np.diff(video, axis=0, prepend=video[:1])
-        
+
         return video
 
-    def gold(self, data: np.ndarray, gt, chunk_size) -> tuple[np.ndarray[Any], np.ndarray[Any]]:
-        #Input shape [N, H, W, C]
+    def gold(
+        self, data: np.ndarray, gt, chunk_size
+    ) -> tuple[np.ndarray[Any], np.ndarray[Any]]:
+        # Input shape [N, H, W, C]
         total_frames = (len(data) // chunk_size) * chunk_size
         data = data[:total_frames]
         gt = gt[:total_frames]
 
-        #Spliting into chunks, we get [Batch, N, H, W, C]
+        # Spliting into chunks, we get [Batch, N, H, W, C]
         split_points = np.arange(chunk_size, len(data), chunk_size)
         chunked_data = np.split(data, split_points)
         chunked_gt = np.split(gt, split_points)
