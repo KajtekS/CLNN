@@ -70,7 +70,9 @@ class Pipeline(ABC):
                 else:
                     bronze_data.append((video_data, gt_data))
 
-            self.save_stage(bronze_data, Path(config.BRONZE.PATH), config_hash, "BRONZE")
+            self.save_stage(
+                bronze_data, Path(config.BRONZE.PATH), config_hash, "BRONZE"
+            )
             current_data = bronze_data
 
         elif option == "bronze" and should_downsample:
@@ -85,7 +87,9 @@ class Pipeline(ABC):
                 )
                 bronze_data.append((video_res, gt_res))
 
-            self.save_stage(bronze_data, Path(config.BRONZE.PATH), config_hash, "BRONZE")
+            self.save_stage(
+                bronze_data, Path(config.BRONZE.PATH), config_hash, "BRONZE"
+            )
             current_data = bronze_data
 
         # SILVER STAGE
@@ -95,15 +99,15 @@ class Pipeline(ABC):
                 video_silver = self.silver(video_data)
                 silver_data.append((video_silver, gt_data))
 
-            self.save_stage(silver_data, Path(config.SILVER.PATH), config_hash, "SILVER")
+            self.save_stage(
+                silver_data, Path(config.SILVER.PATH), config_hash, "SILVER"
+            )
             current_data = silver_data
 
         # GOLD STAGE
         gold_data = []
         for video_data, gt_data in current_data:
-            video_gold, gt_gold = self.gold(
-                video_data, gt_data, config.GOLD.CHUNK_SIZE
-            )
+            video_gold, gt_gold = self.gold(video_data, gt_data, config.GOLD.CHUNK_SIZE)
             gold_data.append((video_gold, gt_gold))
 
         self.save_stage(gold_data, Path(config.GOLD.PATH), config_hash, "GOLD")
@@ -141,9 +145,15 @@ class Pipeline(ABC):
         video = []
         gt = []
 
-        subject_dirs = [d for d in root.iterdir() if d.is_dir() and (d / "video.npy").exists()]
+        subject_dirs = [
+            d for d in root.iterdir() if d.is_dir() and (d / "video.npy").exists()
+        ]
         if not subject_dirs:
-            subject_dirs = [d for d in root.rglob("subject_*") if d.is_dir() and (d / "video.npy").exists()]
+            subject_dirs = [
+                d
+                for d in root.rglob("subject_*")
+                if d.is_dir() and (d / "video.npy").exists()
+            ]
 
         for cat in sorted(subject_dirs, key=lambda p: p.name):
             video.append(np.load(cat / "video.npy"))
@@ -152,7 +162,11 @@ class Pipeline(ABC):
         return (np.array(video), np.array(gt))
 
     def save_stage(
-        self, data: list[tuple[np.ndarray, np.ndarray]], data_path: Path, hash, stage: str
+        self,
+        data: list[tuple[np.ndarray, np.ndarray]],
+        data_path: Path,
+        hash,
+        stage: str,
     ) -> None:
         """Save processed data to a pipeline stage.
 

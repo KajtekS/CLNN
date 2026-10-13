@@ -284,8 +284,8 @@ def test_full_pipeline_end_to_end(tmp_path):
 
 
 # endregion
- 
- 
+
+
 # Testing Pipeline.run method
 # region
 
@@ -339,7 +339,9 @@ def test_pipeline_run_from_raw(tmp_path):
     gt_signal = " ".join(str(float(i)) for i in range(60)) + "\n"
     (raw_dir / "ground_truth.txt").write_text(gt_signal, encoding="utf-8")
 
-    cfg_path = _create_config_file(tmp_path / "config.yaml", "raw", tmp_path, chunk_size=10)
+    cfg_path = _create_config_file(
+        tmp_path / "config.yaml", "raw", tmp_path, chunk_size=10
+    )
     cfg_hash = hash_yaml(cfg_path)
 
     output = pipe.run(cfg_path)
@@ -404,7 +406,9 @@ def test_pipeline_run_from_gold(tmp_path):
     silver_gt = np.arange(20, dtype=np.float32)
     pipe.save_stage([(silver_video, silver_gt)], stages_root, "input_hash", "GOLD")
 
-    cfg_path = _create_config_file(tmp_path / "config.yaml", "gold", tmp_path, chunk_size=10)
+    cfg_path = _create_config_file(
+        tmp_path / "config.yaml", "gold", tmp_path, chunk_size=10
+    )
     cfg_hash = hash_yaml(cfg_path)
     output = pipe.run(cfg_path)
 
