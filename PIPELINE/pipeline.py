@@ -6,9 +6,11 @@ from LOADER.loader import get_loader
 from LOADER.readers import get_dataset_reader
 from CONFIGS.yaml_class import Config, ConfigLoader
 
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 
+from TOOLS.face_roi_extractor import FaceRoiExtractor
 from TOOLS.hash import hash_yaml
 
 
@@ -94,10 +96,19 @@ class Pipeline(ABC):
 
         # SILVER STAGE
         if option in ("raw", "bronze", "silver"):
-            silver_data = []
-            for video_data, gt_data in current_data:
-                video_silver = self.silver(video_data)
-                silver_data.append((video_silver, gt_data))
+
+            def _proces_video(item):
+                video, gt = item
+                extractor = FaceRoiExtractor("TOOLS/mediapipe/face_landmarker.task")
+
+                try:
+                    video_silver = self.silver(video, extractor)
+                    return video_silver, gt
+                finally:
+                    extractor.close()
+
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                silver_data = list(executor.map(_proces_video, current_data))
 
             self.save_stage(
                 silver_data, Path(config.SILVER.PATH), config_hash, "SILVER"
@@ -205,7 +216,7 @@ class Pipeline(ABC):
         pass
 
     @abstractmethod
-    def silver(self, data) -> np.ndarray:
+    def silver(self, data, extractor) -> np.ndarray:
         pass
 
     @abstractmethod

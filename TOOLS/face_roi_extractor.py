@@ -105,6 +105,9 @@ class FaceRoiExtractor:
         )
         self.landmarker = vision.FaceLandmarker.create_from_options(opts)
 
+    def close(self) -> None:
+        self.landmarker.close()
+
     def detect_landmarks(self, frame_bgr: np.ndarray) -> FaceLandmarkerResult:
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         now = int(time.monotonic() * 1000)
