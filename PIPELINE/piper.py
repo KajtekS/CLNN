@@ -11,8 +11,8 @@ from TOOLS.face_roi_extractor import FaceRoiExtractor, FaceLandmarkerResult
 
 
 class Piper(Pipeline):
-    def __init__(self, config_path: Path) -> None:
-        super().__init__(config_path)
+    def __init__(self) -> None:
+        super().__init__()
         self.extractor = FaceRoiExtractor("TOOLS/mediapipe/face_landmarker.task")
 
     def bronze(

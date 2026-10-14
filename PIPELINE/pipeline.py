@@ -21,13 +21,10 @@ def _is_truthy(val: Any) -> bool:
 
 
 class Pipeline(ABC):
-    def __init__(self, config_path: Path) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        # self.config = ConfigParser.parse(config_path)
 
-    def run(self, config_path: Path) -> np.ndarray:
-        config = ConfigLoader.load(config_path)
-
+    def run(self, config: Config, config_path: Path) -> np.ndarray:
         path_obj = Path(config_path)
         if path_obj.is_file():
             config_hash = hash_yaml(path_obj)
