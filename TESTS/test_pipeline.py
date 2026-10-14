@@ -5,9 +5,12 @@ import cv2
 import numpy as np
 import pytest
 
+import threading
+import time
 import yaml
 
 from PIPELINE.piper import Piper
+from TOOLS.face_roi_extractor import FaceRoiExtractor
 from TOOLS.hash import hash_yaml
 
 
@@ -171,6 +174,41 @@ def test_silver_with_detected_face():
     # Second frame diff is 200/255.0 - 100/255.0 = 100/255.0
     expected_diff = np.full((256, 256, 3), 100.0 / 255.0, dtype=np.float32)
     np.testing.assert_allclose(out[1], expected_diff, rtol=1e-5)
+
+
+def test_silver_with_custom_extractor():
+    pipe = Piper(Path("."))
+    frames = np.zeros((2, 100, 100, 3), dtype=np.uint8)
+
+    mock_custom_extractor = MagicMock()
+    mock_custom_extractor.detect_landmarks.return_value = MagicMock()
+    mock_custom_extractor.extract_face_roi.return_value = np.zeros(
+        (256, 256, 3), dtype=np.uint8
+    )
+
+    mock_default_extractor = MagicMock()
+    mock_default_extractor.detect_landmarks.return_value = MagicMock()
+    mock_default_extractor.extract_face_roi.return_value = np.zeros(
+        (256, 256, 3), dtype=np.uint8
+    )
+    pipe.extractor = mock_default_extractor
+
+    # When custom extractor is provided, default pipe.extractor is NOT used
+    out = pipe.silver(frames, extractor=mock_custom_extractor)
+    assert out.shape == (2, 256, 256, 3)
+    assert mock_custom_extractor.detect_landmarks.call_count == 2
+    assert mock_default_extractor.detect_landmarks.call_count == 0
+
+    # When no extractor is provided, default pipe.extractor IS used
+    out_default = pipe.silver(frames)
+    assert out_default.shape == (2, 256, 256, 3)
+    assert mock_default_extractor.detect_landmarks.call_count == 2
+
+
+def test_face_roi_extractor_close():
+    extractor = FaceRoiExtractor("TOOLS/mediapipe/face_landmarker.task")
+    assert extractor.landmarker is not None
+    extractor.close()
 
 
 # endregion
@@ -414,6 +452,106 @@ def test_pipeline_run_from_gold(tmp_path):
 
     assert output.shape == (1, 2, 10, 256, 256, 3)
     assert (stages_root / "GOLD" / cfg_hash / "subject_0" / "video.npy").exists()
+
+
+def test_pipeline_run_multithreading(tmp_path, monkeypatch):
+    pipe = Piper(Path("."))
+
+    # Setup RAW data for 4 subjects
+    raw_root = tmp_path / "raw"
+    for i in range(1, 5):
+        subj_dir = raw_root / f"subject{i}"
+        subj_dir.mkdir(parents=True)
+        _create_dummy_avi(subj_dir / "vid.avi", num_frames=10)
+        gt_signal = " ".join(str(float(k)) for k in range(10)) + "\n"
+        (subj_dir / "ground_truth.txt").write_text(gt_signal, encoding="utf-8")
+
+    cfg_path = _create_config_file(
+        tmp_path / "config.yaml", "raw", tmp_path, chunk_size=5
+    )
+    cfg_hash = hash_yaml(cfg_path)
+
+    thread_ids = set()
+    closed_extractors = 0
+    orig_silver = pipe.silver
+    orig_close = FaceRoiExtractor.close
+
+    def tracking_silver(video, extractor=None):
+        thread_ids.add(threading.get_ident())
+        # Brief sleep to encourage parallel concurrency across ThreadPoolExecutor workers
+        time.sleep(0.02)
+        return orig_silver(video, extractor)
+
+    def tracking_close(self):
+        nonlocal closed_extractors
+        closed_extractors += 1
+        orig_close(self)
+
+    monkeypatch.setattr(pipe, "silver", tracking_silver)
+    monkeypatch.setattr(FaceRoiExtractor, "close", tracking_close)
+
+    output = pipe.run(cfg_path)
+
+    # 1. Verify multithreading: tasks were processed across multiple worker threads
+    assert len(thread_ids) >= 2
+    assert threading.main_thread().ident not in thread_ids
+
+    # 2. Verify resource cleanup: each extractor closed in finally block
+    assert closed_extractors == 4
+
+    # 3. Output shape (4 subjects, 1 chunk of 5 frames, resampled from 10 -> 5 frames)
+    assert output.shape == (4, 1, 5, 256, 256, 3)
+
+    # 4. Check all 4 subjects saved in stages
+    stages_root = tmp_path / "stages"
+    for stage_name in ("BRONZE", "SILVER", "GOLD"):
+        for subj_idx in range(4):
+            subj_path = stages_root / stage_name / cfg_hash / f"subject_{subj_idx}"
+            assert subj_path.exists()
+            assert (subj_path / "video.npy").exists()
+            assert (subj_path / "gt.npy").exists()
+
+
+def test_pipeline_run_multithreading_cleanup_on_error(tmp_path, monkeypatch):
+    pipe = Piper(Path("."))
+    stages_root = tmp_path / "stages"
+
+    # Pre-populate 2 subjects in bronze
+    pipe.save_stage(
+        [(np.zeros((10, 10, 10, 3)), np.zeros(10)), (np.zeros((10, 10, 10, 3)), np.zeros(10))],
+        stages_root,
+        "error_hash",
+        "BRONZE",
+    )
+
+    closed_count = 0
+    orig_close = FaceRoiExtractor.close
+
+    def tracking_close(self):
+        nonlocal closed_count
+        closed_count += 1
+        orig_close(self)
+
+    def failing_silver(video, extractor=None):
+        raise RuntimeError("Simulated processing error in worker thread")
+
+    monkeypatch.setattr(pipe, "silver", failing_silver)
+    monkeypatch.setattr(FaceRoiExtractor, "close", tracking_close)
+
+    cfg_path = _create_config_file(
+        tmp_path / "config.yaml", "bronze", tmp_path, chunk_size=5, downsample=False
+    )
+    with open(cfg_path, "r") as f:
+        cfg = yaml.safe_load(f)
+    cfg["BRONZE"]["PATH"] = str(stages_root / "BRONZE" / "error_hash")
+    with open(cfg_path, "w") as f:
+        yaml.dump(cfg, f)
+
+    with pytest.raises(RuntimeError, match="Simulated processing error in worker thread"):
+        pipe.run(cfg_path)
+
+    # Ensure extractors that were initialized were closed via finally block
+    assert closed_count >= 1
 
 
 # endregion

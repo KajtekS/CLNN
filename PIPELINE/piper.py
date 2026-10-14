@@ -28,13 +28,18 @@ class Piper(Pipeline):
 
         return (data_resampled, gt_resampled)
 
-    def silver(self, data) -> np.ndarray[tuple[Any, ...], np.dtype[Any]]:
+    def silver(
+        self, data, extractor: FaceRoiExtractor | None = None
+    ) -> np.ndarray[tuple[Any, ...], np.dtype[Any]]:
+        if extractor is None:
+            extractor = self.extractor
+
         processed_frames = []
         for frame in data:
             if frame.dtype != np.uint8:
                 frame = np.clip(frame, 0, 255).astype(np.uint8)
-            result = self.extractor.detect_landmarks(frame)
-            roi = self.extractor.extract_face_roi(frame, result)
+            result = extractor.detect_landmarks(frame)
+            roi = extractor.extract_face_roi(frame, result)
             if roi is None:
                 processed_frames.append(np.zeros((256, 256, 3)))
             else:
