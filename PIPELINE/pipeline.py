@@ -1,4 +1,6 @@
 import numpy as np
+import concurrent.futures
+from tqdm import tqdm
 from abc import ABC, abstractmethod
 from MODELS.model import Model
 from pathlib import Path
@@ -136,14 +138,43 @@ class Pipeline(ABC):
         matrixes = []
         gts = []
 
+        paths = [(sample["video_path"], sample["gt_path"]) for sample in samples]
+        reader = get_dataset_reader(dataset_name)
+
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            results = list(
+                tqdm(
+                    executor.map(lambda path: reader.read(*path), paths),
+                    total=len(paths),
+                    desc="Number of proccessed video",
+                )
+            )
+            
+
+        matrices, gts = zip(*results) if results else ([], [])
+
+        return np.array(matrices, dtype=object), np.array(gts, dtype=object)
+
+        '''
+        i=0
+
+        reader = get_dataset_reader(dataset_name)
+
         for sample in samples:
             video_path = sample["video_path"]
             gt_path = sample["gt_path"]
 
-            m, gt = get_dataset_reader(dataset_name).read(video_path, gt_path)
+            m, gt = reader.read(video_path, gt_path)
 
             matrixes.append(m)
             gts.append(gt)
+
+            i+=1
+            print(i)
+            if i % 50 == 0:
+                print(i)
+        '''
+        print("KONIEC")
 
         return (np.array(matrixes), np.array(gts))
 

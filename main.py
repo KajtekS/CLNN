@@ -12,6 +12,7 @@ def main():
     args = parser.parse_args()
     config_path = args.config
     runner = ExperimentRunner(config_path)
+    runner.run()
 
 
 if __name__ == "__main__":

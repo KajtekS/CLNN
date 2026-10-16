@@ -1,34 +1,34 @@
 # Here present my idea for yaml file in our project
 MAIN:
-  PROCESS_LAYER: "raw/bronze/silver/gold"
+  PROCESS_LAYER: "raw"
 
 RAW:
-  PATH: "./hello/world"
-  DATASET_NAME: "dataset-name"
+  PATH: "/home/kserwecinski/CLNN/DATA/RAW/PURE"
+  DATASET_NAME: "PURE"
 
 BRONZE:
-  PATH: "./hello/world"
+  PATH: "/home/kserwecinski/CLNN/DATA/BRONZE"
   FS: 35
   DOWN_SAMPLE:
     DO: "YES"
     FS: 30
-  GT_FS: 30:
+  GT_FS: 30
   DOWN_SAMPLE_GT:
     DO: "YES"
     FS: 30
   
 SILVER:
-  PATH: "./hello/world"
+  PATH: "/home/kserwecinski/CLNN/DATA/SILVER"
   SCALE: 1.5
   MATRIX_SIZE: 72
-  NORM: "YES/NO"
-  STANDARIZATION: "YES/NO"
+  NORM: "YES"
+  STANDARIZATION: "YES"
 
 GOLD:
-  PATH: "./hello/worlds"
+  PATH: "/home/kserwecinski/CLNN/DATA/GOLD"
   CHUNK_SIZE: 270
   AXIS_REORDER: "[N, H, W, C]"
 
 MODEL:
-  GPU: 0/1
+  GPU: 0
   NAME: LNN
